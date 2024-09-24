@@ -1,0 +1,248 @@
+// FORM CREATION
+
+/**
+ * Creates a form element with a given ID.
+ * @param {string} id - The ID to assign to the form element.
+ * @returns {HTMLFormElement} - The created form element.
+ */
+export function createForm(id) {
+    const form = document.createElement('form');
+    form.setAttribute('id', id);
+    return form;
+}
+
+/**
+ * Adds an input field to the specified form.
+ * @param {HTMLFormElement} form - The form to add the input field to.
+ * @param {string} type - The type of the input (e.g., 'text', 'password').
+ * @param {string} name - The name attribute for the input field.
+ * @param {string} label - The label text for the input field.
+ */
+export function addFormField(form, type, name, label) {
+    const fieldLabel = document.createElement('label');
+    fieldLabel.textContent = label;
+    const input = document.createElement('input');
+    input.setAttribute('type', type);
+    input.setAttribute('name', name);
+    form.appendChild(fieldLabel);
+    form.appendChild(input);
+}
+
+/**
+ * Creates a dropdown field and appends it to a form.
+ * @param {HTMLFormElement} form - The form to add the dropdown to.
+ * @param {string} name - The name attribute for the dropdown.
+ * @param {Array<{value: string, text: string}>} options - Array of option objects containing value and display text.
+ */
+export function createDropdown(form, name, options) {
+    const select = document.createElement('select');
+    select.setAttribute('name', name);
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.text = option.text;
+        select.appendChild(opt);
+    });
+    form.appendChild(select);
+}
+
+/**
+ * Dynamically adds or removes a form field.
+ * @param {HTMLFormElement} form - The form to modify.
+ * @param {string} action - The action to perform ('add' or 'remove').
+ * @param {HTMLElement} field - The form field element to add or remove.
+ */
+export function toggleFormField(form, action, field) {
+    if (action === 'add') {
+        form.appendChild(field);
+    } else if (action === 'remove') {
+        form.removeChild(field);
+    }
+}
+
+// EVENT HANDLING
+
+/**
+ * Handles form submission and prevents the default behavior.
+ * @param {HTMLFormElement} form - The form to attach the submit handler to.
+ * @param {function} callback - The function to call when the form is submitted, with form data as argument.
+ */
+export function handleSubmit(form, callback) {
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        callback(formData);
+    });
+}
+
+/**
+ * Adds real-time validation to an input field.
+ * @param {HTMLInputElement} input - The input field to validate.
+ * @param {function} validationFn - The validation function to apply.
+ * @param {string} errorMsg - The error message to display if validation fails.
+ */
+export function addRealTimeValidation(input, validationFn, errorMsg) {
+    input.addEventListener('input', () => {
+        const isValid = validationFn(input.value);
+        const error = isValid ? '' : errorMsg;
+        displayError(input, error);
+    });
+}
+
+/**
+ * Displays an error message next to the input field.
+ * @param {HTMLInputElement} input - The input field.
+ * @param {string} message - The error message to display.
+ */
+function displayError(input, message) {
+    let errorSpan = input.nextElementSibling;
+    if (!errorSpan) {
+        errorSpan = document.createElement('span');
+        errorSpan.className = 'error-message';
+        input.parentNode.insertBefore(errorSpan, input.nextSibling);
+    }
+    errorSpan.textContent = message;
+}
+
+// VALIDATION
+
+/**
+ * Validates an email address.
+ * @param {string} email - The email to validate.
+ * @returns {boolean} - True if the email is valid, false otherwise.
+ */
+export function validateEmail(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+/**
+ * Validates the strength of a password.
+ * @param {string} password - The password to validate.
+ * @returns {boolean} - True if the password is strong enough, false otherwise.
+ */
+export function validatePassword(password) {
+    return password.length >= 8 && /[a-z]/i.test(password) && /\d/.test(password);
+}
+
+/**
+ * Validates that a field is not empty.
+ * @param {string} value - The field value to validate.
+ * @returns {boolean} - True if the field is not empty, false otherwise.
+ */
+export function validateRequired(value) {
+    return value.trim() !== '';
+}
+
+/**
+ * Validates a value using a custom regex pattern.
+ * @param {string} value - The value to validate.
+ * @param {RegExp} regex - The regular expression to test the value.
+ * @returns {boolean} - True if the value matches the regex, false otherwise.
+ */
+export function validateWithRegex(value, regex) {
+    return regex.test(value);
+}
+
+/**
+ * Validates a date format (YYYY-MM-DD).
+ * @param {string} date - The date to validate.
+ * @returns {boolean} - True if the date is in the correct format, false otherwise.
+ */
+export function validateDateFormat(date) {
+    const regex = /^\d{4}-\d{2}-\d{2}$/;
+    return regex.test(date);
+}
+
+// AJAX HELPERS
+
+/**
+ * Submits form data using the Fetch API.
+ * @param {string} url - The URL to send the form data to.
+ * @param {FormData} formData - The form data to send.
+ * @returns {Promise<any>} - The response from the server as a Promise.
+ */
+export async function submitForm(url, formData) {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Form submission failed', error);
+        return null;
+    }
+}
+
+/**
+ * Handles the response from the server after form submission.
+ * @param {any} response - The server's response.
+ * @param {string} successMessage - The message to display on success.
+ * @param {string} errorMessage - The message to display on error.
+ */
+export function handleFormResponse(response, successMessage, errorMessage) {
+    if (response && response.success) {
+        alert(successMessage);
+    } else {
+        alert(errorMessage);
+    }
+}
+
+// INPUT FORMATTING
+
+/**
+ * Formats a phone number as the user types (XXX-XXX-XXXX).
+ * @param {string} input - The phone number input.
+ * @returns {string} - The formatted phone number.
+ */
+export function formatPhoneNumber(input) {
+    return input.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+}
+
+/**
+ * Capitalizes the first letter of each word in a name.
+ * @param {string} name - The name to format.
+ * @returns {string} - The formatted name.
+ */
+export function capitalizeName(name) {
+    return name.replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+/**
+ * Formats a date as YYYY-MM-DD.
+ * @param {string|Date} date - The date to format.
+ * @returns {string} - The formatted date.
+ */
+export function formatDate(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+    return `${year}-${month}-${day}`;
+}
+
+// ERROR MESSAGE HANDLING
+
+/**
+ * Displays an error message next to the input field.
+ * @param {HTMLInputElement} input - The input field.
+ * @param {string} message - The error message to display.
+ */
+export function showError(input, message) {
+    const errorSpan = document.createElement('span');
+    errorSpan.className = 'error';
+    errorSpan.textContent = message;
+    input.parentNode.appendChild(errorSpan);
+}
+
+/**
+ * Clears the error message displayed next to the input field.
+ * @param {HTMLInputElement} input - The input field.
+ */
+export function clearError(input) {
+    const errorSpan = input.parentNode.querySelector('.error');
+    if (errorSpan) {
+        errorSpan.remove();
+    }
+}
